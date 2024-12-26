@@ -1,0 +1,81 @@
+const API_URL = 'https://your-json-server-url/questions';
+
+document.getElementById('questionForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const question = document.getElementById('question').value;
+    const optionA = document.getElementById('optionA').value;
+    const optionB = document.getElementById('optionB').value;
+    const optionC = document.getElementById('optionC').value;
+    const optionD = document.getElementById('optionD').value;
+    const correctOption = document.getElementById('correctOption').value;
+
+    const newQuestion = {
+        title: question,
+        options: [optionA, optionB, optionC, optionD],
+        correctOption: correctOption,
+        reviewStatus: false
+    };
+
+    // POST request to add the question to JSON server
+    fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newQuestion)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert("Question Created");
+        loadQuestions(); // Reload the list of questions
+    });
+});
+
+function loadQuestions() {
+    fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+            const questionList = document.getElementById('questionList');
+            questionList.innerHTML = '';
+
+            data.forEach(question => {
+                const questionCard = document.createElement('div');
+                questionCard.className = 'questionCard';
+                questionCard.style.borderColor = question.reviewStatus ? 'violet' : 'blue';
+                questionCard.innerHTML = `
+                    <h3>${question.title}</h3>
+                    <p>Options: ${question.options.join(', ')}</p>
+                    <button onclick="reviewQuestion(${question.id})">Review Question</button>
+                    <button onclick="deleteQuestion(${question.id})">Delete Question</button>
+                `;
+                questionList.appendChild(questionCard);
+            });
+        });
+}
+
+function reviewQuestion(questionId) {
+    if (confirm("Are you sure to review the question?")) {
+        fetch(${API_URL}/${questionId}, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reviewStatus: true })
+        })
+        .then(response => response.json())
+        .then(() => {
+            loadQuestions(); // Reload questions with updated status
+        });
+    }
+}
+
+function deleteQuestion(questionId) {
+    if (confirm("Are you sure to delete?")) {
+        fetch(${API_URL}/${questionId}, {
+            method: 'DELETE'
+        })
+        .then(() => {
+            loadQuestions(); // Reload remaining questions
+        });
+    }
+}
+
+// Load questions on page load
+loadQuestions();
